@@ -150,15 +150,14 @@ These four answers shape the implementation. Recommended defaults confirmed; imp
 | Backend + login UI + middleware + logout | One complete PR, verifiable end-to-end | Larger surface to review |
 | **Backend + login UI + middleware + logout** ← | **Template is usable after one deploy** | **~5 new files, layout refactor** |
 
-### 6.4 better-auth version pin — `^1.7.0`
+### 6.4 better-auth version pin — `1.7.0-rc.1` exact
 
-**Recommended:** Pin to `^1.7.0`. The `create-admin` CLI shipped in `v1.7.0-beta.4` (PR #9547, merged 2026-05-12). Today's date is 2026-07-16; the v1.7 stable line is current.
+**Resolved:** Pin to `1.7.0-rc.1` exact. v1.7.0 is not yet stable as of 2026-07-16; the latest stable on npm is `1.6.23`, and `1.7.0-rc.1` is the release candidate that has the `create-admin` CLI (PR #9547, merged in beta.4). User confirmed 2026-07-16 to use the RC rather than drop down to 1.6.x.
 
 | Option | Pro | Con |
 |---|---|---|
-| `^1.6.x` (current at write time) | Conservative | No `create-admin` CLI; we'd need to script the first admin manually |
-| `^1.7.0` (latest stable) | Has everything we need | Slightly newer, but v1.7 stable has been out for weeks |
-| **`^1.7.0`** ← | **Forward; covers full plan** | **Beta period is over; minor risk of late-arriving patches** |
+| `^1.6.23` (latest stable) | Conservative, on `latest` dist-tag | No `create-admin` CLI; need a `scripts/create-admin.mjs` ourselves |
+| **`1.7.0-rc.1`** exact ← | **Has `create-admin` CLI; recent RC; aligns with the Vercel integration announcement** | **Pre-release. `^` does NOT auto-upgrade to a future 1.7.0 stable — we'll bump manually when it ships. Install with `--legacy-peer-deps` because `@vercel/connect@0.2.2` peer is `">=1.5.0"` and npm excludes pre-releases from ranges.** |
 
 ## 7. Implementation steps (ordered)
 
