@@ -177,11 +177,14 @@ vercel deploy
 The default `agent/channels/eve.ts` ships with **`placeholderAuth()`** for browser requests. The placeholder won't allow browser traffic in production. Replace it with your auth provider before going public:
 
 ```ts
-// example: Clerk / Auth.js / none() for a public demo
-import { authjsAuth, clerkAuth, none } from "eve/channels/auth";
+// example: drop in a custom AuthFn wired to your auth provider.
+// better-auth is preferred for this template — see
+// docs/learnings/vercel/eve/auth.md for the working sketch.
+// Auth.js / Clerk / `none()` are also valid alternatives.
+import { none } from "eve/channels/auth";
 ```
 
-Or call `eve channels add web --auth=clerk` to regenerate with a real provider.
+Or call `eve channels add web --auth=clerk` to regenerate with a real provider (better-auth currently requires a hand-written channel file).
 
 ## Testing with evals
 
