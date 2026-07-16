@@ -186,6 +186,73 @@ import { none } from "eve/channels/auth";
 
 Or call `eve channels add web --auth=clerk` to regenerate with a real provider (better-auth currently requires a hand-written channel file).
 
+## Authentication
+
+This template is **login-only**: no public sign-up, no social sign-in. Users are created via CLI by an admin. The first admin bootstraps via better-auth's `create-admin`; subsequent users (admin or non-admin) are added via `scripts/create-user.mjs`.
+
+### Bootstrap the first admin
+
+After the first deploy (or after running migrations locally), create the first admin:
+
+```bash
+bash scripts/create-admin.sh \
+  --email admin@your-domain.com \
+  --password 'something-strong-here' \
+  --name "Admin"
+```
+
+The script sources `.env` (or `.env.local`) and invokes `npx auth@1.7.0-rc.1 create-admin` with the rest. Pinned to the RC because `auth@latest` is `1.6.23` on npm and lacks `create-admin`. Flags: `--role`, `--data`, `--no-email-verified`, `--force / -y`.
+
+### Add non-admin users
+
+Once the first admin exists, add regular users (or more admins):
+
+```bash
+node --env-file=.env scripts/create-user.mjs \
+  --email alice@your-domain.com \
+  --name "Alice" \
+  --password 'something-strong-here' \
+  --role user
+```
+
+Uses better-auth's `auth.api.createUser` server API, which (per `commit f2520f95`) works without an active admin session when called from a server-only context.
+
+### Sign-in flow
+
+1. User opens `/login` and submits email + password via `authClient.signIn.email`.
+2. better-auth sets the session cookie (`httpOnly`, `secure`, `sameSite=lax`).
+3. `proxy.ts` checks for the cookie at the edge and redirects anonymous users to `/login` (fast, no DB hit).
+4. `app/(authenticated)/layout.tsx` re-validates the session against the database (the **real security boundary** — cookie-only is forgeable).
+5. User lands on the chat at `/`.
+
+Sign out: click the **Sign out** button in the chat header (top-right).
+
+### Where the auth pieces live
+
+| File | Role |
+|---|---|
+| `lib/auth.ts` | better-auth instance (`drizzleAdapter` + `admin` + `emailAndPassword` + before-hook closing `/sign-up/*`) |
+| `lib/auth-client.ts` | Browser-side `authClient` with `adminClient` plugin |
+| `lib/eve-auth.ts` | eve `AuthFn` adapter: `auth.api.getSession({ headers })` → `SessionAuthContext` |
+| `app/api/auth/[...all]/route.ts` | Catch-all HTTP handler (`toNextJsHandler(auth)`) |
+| `app/(authenticated)/layout.tsx` | Server-side auth check (real boundary) |
+| `app/login/page.tsx` | Email/password form |
+| `components/sign-out-button.tsx` | Sign out button (chat header) |
+| `proxy.ts` | Edge cookie check (redirect optimization — **not** security) |
+| `agent/channels/eve.ts` | Auth chain: `[betterAuthFn, vercelOidc(), localDev()]` |
+| `scripts/create-admin.sh` | Bootstrap first admin (calls `npx auth create-admin`) |
+| `scripts/create-user.mjs` | Add non-admin users (calls `auth.api.createUser`) |
+| `.env.example` | Required env vars (`DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`) |
+
+### Notes
+
+- **Sign-up endpoint is closed** via `emailAndPassword.disableSignUp: true` + a before-hook that rejects any future `/sign-up/*` request — belt-and-suspenders against plugins re-opening it.
+- **Email verification is off by default.** Admin vetting at user-creation time is the verification layer for this template. If you later add a self-service signup path, you'll need a transactional email provider and `requireEmailVerification: true` — at which point revisit the threat model.
+- **Two-layer auth check.** `proxy.ts` is for redirect UX (fast, no DB); `(authenticated)/layout.tsx` is the security boundary (DB hit, real validation). Anyone can forge a cookie, but they still won't get past the layout.
+- **eve agents and the web UI share the same session cookie.** A logged-in user on `/` can call `POST /eve/v1/session` because `betterAuthFn` resolves them via the same `getSession({ headers })` call.
+
+For deeper context on the auth model and security warnings, see [`docs/learnings/vercel/eve/auth.md`](./docs/learnings/vercel/eve/auth.md) and the [integration plan](./docs/plans/drizzle-better-auth-integration.md).
+
 ## Testing with evals
 
 ```bash
