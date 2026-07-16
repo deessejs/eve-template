@@ -15,6 +15,7 @@ import {
   PromptInputTextarea,
 } from "@/components/ai-elements/prompt-input";
 import { cn } from "@/lib/utils";
+import { SignOutButton } from "@/components/sign-out-button";
 import { AgentMessage } from "./agent-message";
 
 const AGENT_NAME = "eve-template";
@@ -61,11 +62,12 @@ export function AgentChat() {
   return (
     <main className="flex h-dvh flex-col overflow-hidden bg-background text-foreground">
       {isEmpty ? null : (
-        <header className="flex h-14 shrink-0 items-center justify-center gap-3 pl-4 pr-2">
+        <header className="flex h-14 shrink-0 items-center justify-between gap-3 px-4">
           <span className="flex min-w-0 items-center gap-2">
             <span className="truncate text-muted-foreground text-sm">{AGENT_NAME}</span>
             <StatusDot status={agent.status} />
           </span>
+          <SignOutButton />
         </header>
       )}
 
