@@ -1,0 +1,1 @@
+- [Project goal](project_eve_template_goal.md) — repo is a starter scaffold for building eve (Vercel) agents, not a research archive
