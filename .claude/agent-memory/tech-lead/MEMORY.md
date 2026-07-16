@@ -3,3 +3,5 @@
 - [Auth: no default email verification in login-only](feedback_auth_no_default_verification_login_only.md) — for login-only/admin-gated templates, leave `requireEmailVerification: false`; admin vetting replaces it
 - [Next.js 16: `proxy.ts`, not `middleware.ts`](project_next16_proxy_ts.md) — Next 16 renamed the request-interceptor file; use `proxy.ts` in this workspace
 - [Drizzle: pass `{ schema }` to `drizzle()` for better-auth](feedback_drizzle_schema_pass_to_instance.md) — better-auth's drizzleAdapter introspects the instance; without `schema` you get "model user was not found"
+- [Do NOT launch the dev server](feedback_no_launch_dev_server.md) — user runs `npm run dev` themselves; never spawn any HTTP server (foreground, `&`, or `run_in_background`)
+- [better-auth 1.7.0-rc.1 needs dep overrides](project_betterauth_rc_dep_overrides.md) — package.json `overrides` must pin jose@^6.1.0 and kysely@^0.28.17; install with --legacy-peer-deps
