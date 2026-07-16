@@ -22,6 +22,7 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { admin } from "better-auth/plugins";
 import { Pool } from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
+import * as schema from "../db/schema/auth.ts";
 
 function parseArgs(argv) {
   const args = {};
@@ -66,6 +67,7 @@ async function main() {
 
   const db = drizzle(
     new Pool({ connectionString: process.env.DATABASE_URL }),
+    { schema },
   );
 
   const auth = betterAuth({

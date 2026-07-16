@@ -32,6 +32,20 @@ export const auth = betterAuth({
 
 The `db` you pass in is whatever Drizzle instance you already use in your app — Drizzle doesn't take over your DB connection, it just hands the adapter a queryable surface.
 
+⚠️ **The Drizzle instance must be built with the schema passed**, otherwise the adapter's table introspection fails at runtime with `model "user" was not found in the schema object`:
+
+```ts
+// db.ts
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
+import * as schema from "./schema/auth";
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL! });
+export const db = drizzle(pool, { schema });   // ← `{ schema }` is required
+```
+
+The `./schema/auth.ts` file is produced by the `npx auth@latest generate` step below. Import it and pass to `drizzle()` — same applies to any standalone script that constructs its own Drizzle instance (CLI user creation, cron jobs, etc.).
+
 ## Schema generation & migration — the workflow
 
 Unlike the **built-in Kysely adapter** (where `npx auth@latest migrate` applies the schema directly), Drizzle goes through Drizzle Kit:
