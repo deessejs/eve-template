@@ -5,3 +5,5 @@
 - [Drizzle: pass `{ schema }` to `drizzle()` for better-auth](feedback_drizzle_schema_pass_to_instance.md) — better-auth's drizzleAdapter introspects the instance; without `schema` you get "model user was not found"
 - [Do NOT launch the dev server](feedback_no_launch_dev_server.md) — user runs `npm run dev` themselves; never spawn any HTTP server (foreground, `&`, or `run_in_background`)
 - [better-auth 1.7.0-rc.1 needs dep overrides](project_betterauth_rc_dep_overrides.md) — package.json `overrides` must pin jose@^6.1.0 and kysely@^0.28.17; install with --legacy-peer-deps
+- [MiniMax: direct provider, not AI Gateway](feedback_minimax_direct_provider.md) — use `vercel-minimax-ai-provider`, NOT `minimax/minimax-m3` AI Gateway string
+- [eve: keep `src/internal/authored-module-map-loader.ts` bridge](project_eve_authored_module_bridge.md) — workaround for vercel/eve#92; delete only after PR#156 ships in a later eve version
