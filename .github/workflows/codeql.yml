@@ -1,0 +1,66 @@
+name: "CodeQL"
+
+# Scans the repo for security-relevant code patterns using GitHub's
+# CodeQL engine. Free for public repos; uploads results to the Security
+# tab and posts annotations on PRs.
+#
+# Runs on:
+#   - push to main or staging (catches regressions at integration time)
+#   - pull_request against main or staging (catches them at review time)
+#   - weekly cron (catches newly disclosed CWEs that apply to unchanged code)
+#
+# TypeScript is an interpreted language for CodeQL purposes, so the
+# `build-mode: none` default is correct — no `npm run build` between
+# init and analyze.
+
+"on":
+  push:
+    branches: ["main", "staging"]
+  pull_request:
+    branches: ["main", "staging"]
+  schedule:
+    # Weekly scan to catch new CVEs that affect existing code.
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: "ubuntu-latest"
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ["typescript"]
+
+    steps:
+      - name: Checkout repository
+        uses: "actions/checkout@v4"
+
+      - name: Initialize CodeQL
+        uses: "github/codeql-action/init@v3"
+        with:
+          languages: ${{ matrix.language }}
+          # `security-extended` = `security` + medium-severity variants.
+          # Right floor for an auth-heavy TS app.
+          queries: security-extended
+          paths-ignore:
+            - ".next"
+            - "node_modules"
+            - ".eve"
+            - ".claude"
+            - "**/*.test.ts"
+            - "**/*.test.tsx"
+            - "tests/**"
+            - "docs/**"
+
+      - name: Perform CodeQL Analysis
+        uses: "github/codeql-action/analyze@v3"
+        with:
+          category: "/language:${{ matrix.language }}"

@@ -7,3 +7,5 @@
 - [better-auth 1.7.0-rc.1 needs dep overrides](project_betterauth_rc_dep_overrides.md) — package.json `overrides` must pin jose@^6.1.0 and kysely@^0.28.17; install with --legacy-peer-deps
 - [MiniMax: direct provider, not AI Gateway](feedback_minimax_direct_provider.md) — use `vercel-minimax-ai-provider`, NOT `minimax/minimax-m3` AI Gateway string
 - [eve: keep `src/internal/authored-module-map-loader.ts` bridge](project_eve_authored_module_bridge.md) — workaround for vercel/eve#92; delete only after PR#156 ships in a later eve version
+- [deessejs IS the org, not a fork leftover](feedback_deessejs_correct_org.md) — LICENSE/README/issue-template contact links to `deessejs` and `deessejs/saas-template` are intentional, not inconsistencies
+- [Release pipeline is agent-driven, not CI-driven](project_agent_driven_release_workflow.md) — `ship` + `release` skills implement the whole flow via `gh`/`git`; no `.github/workflows/release.yml` expected

@@ -9,9 +9,9 @@ name: "CI"
 
 "on":
   pull_request:
-    branches: ["main"]
+    branches: ["main", "staging"]
   push:
-    branches: ["main"]
+    branches: ["main", "staging"]
   workflow_dispatch:
 
 jobs:
@@ -29,12 +29,8 @@ jobs:
           cache: "npm"
 
       - run: "npm install --include=dev --legacy-peer-deps"
-      # No lint script in package.json yet — this job is a placeholder.
-      # When a linter is added (ESLint / Biome), wire it here via
-      # `npm run lint`. Until then, fail open so the workflow doesn't
-      # block PRs during early template setup.
-      - name: "Run linter (no-op until configured)"
-        run: "npm run lint --if-present || echo 'lint: no linter configured yet'"
+      - name: "Run ESLint"
+        run: "npm run lint"
 
   typecheck:
     name: "Type Check"
@@ -51,6 +47,23 @@ jobs:
 
       - run: "npm install --include=dev --legacy-peer-deps"
       - run: "npm run typecheck"
+
+  test:
+    name: "Test"
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: "actions/checkout@v4"
+        with:
+          fetch-depth: 0
+
+      - uses: "actions/setup-node@v4"
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - run: "npm install --include=dev --legacy-peer-deps"
+      - name: "Run smoke tests"
+        run: "npm test"
 
   build:
     name: "Build"
