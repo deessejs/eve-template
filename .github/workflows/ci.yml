@@ -1,6 +1,8 @@
 name: CI
 
-on:
+# `on:` is a YAML 1.1 reserved word (boolean true). Quote it so parsers
+# don't trip on it. See https://docs.github.com/actions/using-workflows/triggering-a-workflow
+"on":
   pull_request:
     branches: [main]
   push:
