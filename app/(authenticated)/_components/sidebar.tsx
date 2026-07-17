@@ -13,13 +13,13 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { SignOutButton } from "@/components/sign-out-button";
+import { ConversationActionsMenu } from "@/app/_components/conversation-actions-menu";
 import { cn } from "@/lib/utils";
 import type { ConversationMeta } from "@/lib/conversations";
 
@@ -166,9 +166,11 @@ export function ChatSidebar({ initialItems }: { initialItems: SidebarItem[] }) {
                           </span>
                         </Link>
                       </SidebarMenuButton>
-                      {item.pinned ? (
-                        <SidebarMenuAction disabled>📌</SidebarMenuAction>
-                      ) : null}
+                      <ConversationActionsMenu
+                        isActive={isActive}
+                        pathname={pathname}
+                        row={item}
+                      />
                     </SidebarMenuItem>
                   );
                 })
