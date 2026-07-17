@@ -141,12 +141,12 @@ export function ChatSidebar({ initialItems }: { initialItems: SidebarItem[] }) {
                     <SidebarMenuItem key={item.id}>
                       <SidebarMenuButton isActive={isActive}>
                         <Link
-                          className="flex min-w-0 flex-row items-start gap-0.5"
+                          className="flex w-full min-w-0 flex-row items-center justify-between gap-2"
                           href={`/?c=${item.id}`}
                         >
                           <span
                             className={cn(
-                              "truncate font-medium text-sm",
+                              "min-w-0 flex-1 truncate font-medium text-sm",
                               isActive
                                 ? "text-sidebar-accent-foreground"
                                 : "text-sidebar-foreground",
@@ -156,7 +156,7 @@ export function ChatSidebar({ initialItems }: { initialItems: SidebarItem[] }) {
                           </span>
                           <span
                             className={cn(
-                              "truncate text-xs",
+                              "shrink-0 truncate text-xs",
                               isActive
                                 ? "text-sidebar-accent-foreground/70"
                                 : "text-sidebar-foreground/70",
