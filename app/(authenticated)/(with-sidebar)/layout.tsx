@@ -50,7 +50,7 @@ export default async function WithSidebarLayout({
           <ChatSidebar initialItems={items} />
         </Suspense>
         <SidebarInset>
-          <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b bg-background px-4">
+          <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4">
             <SidebarTrigger />
           </header>
           <div className="flex min-h-0 flex-1 flex-col">{children}</div>

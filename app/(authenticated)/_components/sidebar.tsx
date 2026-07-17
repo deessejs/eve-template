@@ -106,7 +106,7 @@ export function ChatSidebar({ initialItems }: { initialItems: SidebarItem[] }) {
 
   return (
     <Sidebar>
-      <SidebarHeader>
+      <SidebarHeader className="border-b border-border h-14">
         <SidebarMenu>
           <SidebarMenuItem>
             <Button
