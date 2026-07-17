@@ -6,17 +6,20 @@ import * as schema from "./schema/auth";
 // may pool differently — for this template the agent runtime runs in
 // Node, so a single Pool is fine. Adjust if deploying to edge.
 //
-// We configure `ssl` explicitly instead of letting `pg-connection-string`
-// parse `?sslmode=...` from the URL. As of pg-connection-string v2.x,
-// `sslmode=prefer | require | verify-ca` are silently treated as
-// `verify-full`; in v3.0 they'll switch to libpq semantics, which would
-// silently weaken the security of any URL that omits the explicit mode.
-// Configuring the Pool ourselves is stable across versions.
+// SSL is configured in two layers:
 //
-// Resolution is lazy: the URL is only inspected when the Pool actually
-// dials. This lets the smoke test (which imports modules without a real
-// DATABASE_URL) keep working, while still surfacing a clear error at the
-// first query in misconfigured deployments.
+//   1. We pass `ssl: { rejectUnauthorized: true }` to the Pool, so the
+//      connection itself uses verify-full (the strongest check).
+//
+//   2. We rewrite DATABASE_URL so that its `sslmode` query param is
+//      always `verify-full`. `pg-connection-string` emits a deprecation
+//      warning whenever it sees `sslmode=prefer | require | verify-ca`,
+//      regardless of what we pass to the Pool — that warning is based on
+//      URL parsing alone, not on the resolved `ssl` config. The only way
+//      to silence it is to have the URL itself carry `verify-full`.
+//
+// The Pool sees the rewritten URL; the rest of the codebase (better-auth,
+// drizzle) sees the original via `process.env.DATABASE_URL`.
 
 type SslConfig = false | { rejectUnauthorized: true };
 
@@ -31,7 +34,6 @@ function resolveSslConfig(connectionString: string | undefined): SslConfig {
   try {
     hostname = new URL(connectionString).hostname;
   } catch {
-    // The URL is malformed; let `pg` produce its own error on first query.
     return false;
   }
   if (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1") {
@@ -40,11 +42,33 @@ function resolveSslConfig(connectionString: string | undefined): SslConfig {
   return { rejectUnauthorized: true };
 }
 
-// We snapshot DATABASE_URL at module load. In production the env is
-// stable; in dev / test it usually is too. If you need to swap the URL
-// at runtime, recreate the Pool yourself.
-const connectionString = process.env.DATABASE_URL;
-const ssl: SslConfig = resolveSslConfig(connectionString);
+// Rewrite `sslmode=prefer|require|verify-ca` to `sslmode=verify-full`
+// to silence the pg-connection-string deprecation warning. We keep all
+// other URL parameters intact. Returns the input unchanged if it doesn't
+// parse as a URL or doesn't carry a libpq-compatible sslmode.
+function normalizeSslMode(connectionString: string | undefined): string | undefined {
+  if (!connectionString) return connectionString;
+  let url: URL;
+  try {
+    url = new URL(connectionString);
+  } catch {
+    return connectionString;
+  }
+  const sslmode = url.searchParams.get("sslmode");
+  if (
+    sslmode === "prefer" ||
+    sslmode === "require" ||
+    sslmode === "verify-ca"
+  ) {
+    url.searchParams.set("sslmode", "verify-full");
+    return url.toString();
+  }
+  return connectionString;
+}
+
+const rawUrl = process.env.DATABASE_URL;
+const connectionString = normalizeSslMode(rawUrl);
+const ssl: SslConfig = resolveSslConfig(rawUrl);
 
 export const pool = new Pool({ connectionString, ssl });
 
