@@ -21,10 +21,6 @@ name: "CodeQL"
   schedule:
     # Weekly scan to catch new CVEs that affect existing code.
     - cron: "17 6 * * 1"
-  workflow_dispatch:
-
-permissions:
-  contents: read
 
 jobs:
   analyze:
