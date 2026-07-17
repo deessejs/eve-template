@@ -9,3 +9,4 @@
 - [eve: keep `src/internal/authored-module-map-loader.ts` bridge](project_eve_authored_module_bridge.md) — workaround for vercel/eve#92; delete only after PR#156 ships in a later eve version
 - [deessejs IS the org, not a fork leftover](feedback_deessejs_correct_org.md) — LICENSE/README/issue-template contact links to `deessejs` and `deessejs/saas-template` are intentional, not inconsistencies
 - [Release pipeline is agent-driven, not CI-driven](project_agent_driven_release_workflow.md) — `ship` + `release` skills implement the whole flow via `gh`/`git`; no `.github/workflows/release.yml` expected
+- [GitHub Actions YAML: quote every reserved-word-adjacent key](feedback_yaml_github_actions_quote_keys.md) — workflow files MUST mirror ci.yml's quoted-keys pattern; unquoted `name:` / `on:` / `jobs:` makes the file "active" but no jobs ever run
