@@ -1,8 +1,8 @@
 "use client";
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useTransition } from "react";
 
 import {
   Sidebar,
@@ -22,24 +22,86 @@ import { Button } from "@/components/ui/button";
 import { SignOutButton } from "@/components/sign-out-button";
 import type { ConversationMeta } from "@/lib/conversations";
 
-export type SidebarItem = Pick<
-  ConversationMeta,
-  "id" | "title" | "preview" | "updatedAt" | "pinned" | "messageCount"
->;
+export type SidebarItem = Omit<
+  Pick<ConversationMeta, "id" | "title" | "preview" | "pinned" | "messageCount">,
+  never
+> & {
+  // `updatedAt` is serialized to ISO string by the JSON wire; the server-side
+  // `ConversationMeta` uses `Date` for the Drizzle-internal row but the API
+  // response is always a string.
+  updatedAt: string;
+};
 
-export function ChatSidebar({ items }: { items: SidebarItem[] }) {
+/**
+ * Stable query key for the conversation list. Exported so other parts of the
+ * app (the chat surface in particular) can invalidate the cache after
+ * mutations or turn boundaries.
+ */
+export const CONVERSATIONS_QUERY_KEY = ["conversations"] as const;
+
+type ConversationListResponse = { items: SidebarItem[] };
+type CreateConversationResponse = { item: SidebarItem };
+
+async function fetchConversations(): Promise<SidebarItem[]> {
+  const res = await fetch("/api/conversations", { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to load conversations");
+  const data = (await res.json()) as ConversationListResponse;
+  return data.items;
+}
+
+export function ChatSidebar({ initialItems }: { initialItems: SidebarItem[] }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [pending, startTransition] = useTransition();
+  const qc = useQueryClient();
 
-  const handleNewChat = () => {
-    startTransition(async () => {
+  // SSR data seeds the cache so the sidebar is interactive on the first
+  // paint. We revalidate in the background to catch changes from other
+  // tabs (the cache is shared per-tab; cross-tab live updates need SSE).
+  const { data: items = initialItems } = useQuery({
+    queryKey: CONVERSATIONS_QUERY_KEY,
+    queryFn: fetchConversations,
+    initialData: initialItems,
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (): Promise<SidebarItem> => {
       const res = await fetch("/api/conversations", { method: "POST" });
-      if (!res.ok) return;
-      const { item } = (await res.json()) as { item: SidebarItem };
+      if (!res.ok) throw new Error("Failed to create conversation");
+      const data = (await res.json()) as CreateConversationResponse;
+      return data.item;
+    },
+    onMutate: async () => {
+      // Optimistic insert: a temp id so the UI can render the new row
+      // before the server round-trip resolves. The cache is rolled back
+      // on error and replaced with the server-confirmed row on success.
+      await qc.cancelQueries({ queryKey: CONVERSATIONS_QUERY_KEY });
+      const previous = qc.getQueryData<SidebarItem[]>(CONVERSATIONS_QUERY_KEY);
+      const optimistic: SidebarItem = {
+        id: `optimistic-${Date.now()}`,
+        title: null,
+        preview: null,
+        messageCount: 0,
+        pinned: false,
+        updatedAt: new Date().toISOString(),
+      };
+      qc.setQueryData<SidebarItem[]>(CONVERSATIONS_QUERY_KEY, (old) => [
+        optimistic,
+        ...(old ?? []),
+      ]);
+      return { previous, optimisticId: optimistic.id };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) {
+        qc.setQueryData(CONVERSATIONS_QUERY_KEY, ctx.previous);
+      }
+    },
+    onSuccess: (item, _vars, ctx) => {
+      qc.setQueryData<SidebarItem[]>(CONVERSATIONS_QUERY_KEY, (old) =>
+        (old ?? []).map((i) => (i.id === ctx?.optimisticId ? item : i)),
+      );
       router.push(`/?c=${item.id}`);
-    });
-  };
+    },
+  });
 
   return (
     <Sidebar>
@@ -48,12 +110,12 @@ export function ChatSidebar({ items }: { items: SidebarItem[] }) {
           <SidebarMenuItem>
             <Button
               className="w-full justify-start"
-              disabled={pending}
-              onClick={handleNewChat}
+              disabled={createMutation.isPending}
+              onClick={() => createMutation.mutate()}
               type="button"
               variant="outline"
             >
-              {pending ? "Creating…" : "+ New chat"}
+              {createMutation.isPending ? "Creating…" : "+ New chat"}
             </Button>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -84,7 +146,7 @@ export function ChatSidebar({ items }: { items: SidebarItem[] }) {
                           <span className="truncate font-medium text-sm">
                             {label}
                           </span>
-                          <span className="truncate text-muted-foreground text-xs">
+                          <span className="truncate text-xs">
                             {formatRelative(item.updatedAt)}
                           </span>
                         </Link>

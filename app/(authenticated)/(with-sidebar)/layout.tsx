@@ -3,6 +3,7 @@ import { Suspense } from "react";
 
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { ChatSidebar } from "@/app/(authenticated)/_components/sidebar";
+import { QueryProvider } from "@/app/_components/query-provider";
 import { listConversations } from "@/lib/conversations";
 import { requireUser } from "@/lib/require-user";
 
@@ -23,7 +24,18 @@ export default async function WithSidebarLayout({
     // upstream and this render is unreachable.
     return null;
   }
-  const items = await listConversations(auth.userId);
+  const rawItems = await listConversations(auth.userId);
+  // `ConversationMeta.updatedAt` is a `Date` server-side; the API wire and
+  // the sidebar component want an ISO string. Map once at the boundary so
+  // downstream code never deals with the Date type for this field.
+  const items = rawItems.map((item) => ({
+    id: item.id,
+    title: item.title,
+    preview: item.preview,
+    pinned: item.pinned,
+    messageCount: item.messageCount,
+    updatedAt: item.updatedAt.toISOString(),
+  }));
 
   // SidebarProvider persists `defaultOpen` (and any later toggle) in a
   // cookie; the default is the inverse of the cookie value so first-time
@@ -32,16 +44,18 @@ export default async function WithSidebarLayout({
   const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false";
 
   return (
-    <SidebarProvider defaultOpen={defaultOpen}>
-      <Suspense>
-        <ChatSidebar items={items} />
-      </Suspense>
-      <SidebarInset>
-        <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger />
-        </header>
-        <div className="flex min-h-0 flex-1 flex-col">{children}</div>
-      </SidebarInset>
-    </SidebarProvider>
+    <QueryProvider>
+      <SidebarProvider defaultOpen={defaultOpen}>
+        <Suspense>
+          <ChatSidebar initialItems={items} />
+        </Suspense>
+        <SidebarInset>
+          <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+            <SidebarTrigger />
+          </header>
+          <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+        </SidebarInset>
+      </SidebarProvider>
+    </QueryProvider>
   );
 }

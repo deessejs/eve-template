@@ -3,8 +3,9 @@
 import type { UserContent } from "ai";
 import type { HandleMessageStreamEvent } from "eve/client";
 import { useEveAgent } from "eve/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { AlertCircleIcon } from "lucide-react";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import {
   Conversation,
@@ -21,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { SignOutButton } from "@/components/sign-out-button";
 import { AgentMessage } from "./agent-message";
 import { useEventBatcher } from "./agent-chat-batcher";
+import { CONVERSATIONS_QUERY_KEY } from "@/app/(authenticated)/_components/sidebar";
 import type { ConversationMeta, PersistedEvent } from "@/lib/conversations";
 
 const AGENT_NAME = "eve-template";
@@ -113,6 +115,22 @@ export function AgentChat({
 
   const isBusy = agent.status === "submitted" || agent.status === "streaming";
   const isEmpty = agent.data.messages.length === 0;
+
+  // When a turn settles, the conversation's `updatedAt` and `messageCount`
+  // have changed in the DB. Invalidate the sidebar's list cache so the new
+  // ordering and counts show up. We only fire on transitions out of
+  // `streaming`/`submitted` to keep this cheap (no per-event invalidation).
+  const qc = useQueryClient();
+  const prevStatusRef = useRef(agent.status);
+  useEffect(() => {
+    const wasBusy =
+      prevStatusRef.current === "submitted" ||
+      prevStatusRef.current === "streaming";
+    if (wasBusy && (agent.status === "ready" || agent.status === "error")) {
+      void qc.invalidateQueries({ queryKey: CONVERSATIONS_QUERY_KEY });
+    }
+    prevStatusRef.current = agent.status;
+  }, [agent.status, qc]);
 
   const handleSubmit = async (message: PromptInputMessage) => {
     const text = message.text.trim();
