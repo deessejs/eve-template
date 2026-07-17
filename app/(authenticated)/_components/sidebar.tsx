@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { SignOutButton } from "@/components/sign-out-button";
+import { cn } from "@/lib/utils";
 import type { ConversationMeta } from "@/lib/conversations";
 
 export type SidebarItem = Omit<
@@ -143,10 +144,24 @@ export function ChatSidebar({ initialItems }: { initialItems: SidebarItem[] }) {
                           className="flex min-w-0 flex-col items-start gap-0.5"
                           href={`/?c=${item.id}`}
                         >
-                          <span className="truncate font-medium text-sm">
+                          <span
+                            className={cn(
+                              "truncate font-medium text-sm",
+                              isActive
+                                ? "text-sidebar-accent-foreground"
+                                : "text-sidebar-foreground",
+                            )}
+                          >
                             {label}
                           </span>
-                          <span className="truncate text-xs">
+                          <span
+                            className={cn(
+                              "truncate text-xs",
+                              isActive
+                                ? "text-sidebar-accent-foreground/70"
+                                : "text-sidebar-foreground/70",
+                            )}
+                          >
                             {formatRelative(item.updatedAt)}
                           </span>
                         </Link>
