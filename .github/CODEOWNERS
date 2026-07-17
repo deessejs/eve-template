@@ -1,0 +1,24 @@
+# Default owner — every PR requires @codewizdave review unless overridden below.
+# Paths use POSIX style (forward slashes) per GitHub's CODEOWNERS convention.
+
+* @codewizdave
+
+# ─── Auth & DB ──────────────────────────────────────────────────────────
+# better-auth instance, drizzle config, auth-related routes.
+/lib/                 @codewizdave
+/db/                  @codewizdave
+/app/api/auth/        @codewizdave
+
+# ─── Agent (eve) ────────────────────────────────────────────────────────
+# Authored agent surface — agent.ts, channels, connections, etc.
+/agent/               @codewizdave
+
+# ─── CLI scripts (admin/user bootstrap) ────────────────────────────────
+/scripts/             @codewizdave
+
+# ─── Web UI (Next.js App Router + shadcn/ui + ai-elements) ─────────────
+/app/                 @codewizdave
+/components/          @codewizdave
+
+# ─── CI / GitHub config ────────────────────────────────────────────────
+/.github/workflows/   @codewizdave
