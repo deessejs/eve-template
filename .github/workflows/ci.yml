@@ -1,71 +1,76 @@
-name: CI
+name: "CI"
 
 # `on:` is a YAML 1.1 reserved word (boolean true). Quote it so parsers
 # don't trip on it. See https://docs.github.com/actions/using-workflows/triggering-a-workflow
+# Same trap applies to bare string values like `cache: npm` or `name: Lint`
+# which YAML 1.1 parses as `cache: true` / `name: true` — GitHub's strict
+# parser then rejects the workflow. Quoting all string values is the
+# canonical fix.
+
 "on":
   pull_request:
-    branches: [main]
+    branches: ["main"]
   push:
-    branches: [main]
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
   lint:
-    name: Lint
-    runs-on: ubuntu-latest
+    name: "Lint"
+    runs-on: "ubuntu-latest"
     steps:
-      - uses: actions/checkout@v4
+      - uses: "actions/checkout@v4"
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: "actions/setup-node@v4"
         with:
-          node-version: 24
-          cache: npm
+          node-version: "24"
+          cache: "npm"
 
-      - run: npm ci --legacy-peer-deps
+      - run: "npm ci --legacy-peer-deps"
       # No lint script in package.json yet — this job is a placeholder.
       # When a linter is added (ESLint / Biome), wire it here via
       # `npm run lint`. Until then, fail open so the workflow doesn't
       # block PRs during early template setup.
-      - name: Run linter (no-op until configured)
-        run: npm run lint --if-present || echo "lint: no linter configured yet"
+      - name: "Run linter (no-op until configured)"
+        run: "npm run lint --if-present || echo 'lint: no linter configured yet'"
 
   typecheck:
-    name: Type Check
-    runs-on: ubuntu-latest
+    name: "Type Check"
+    runs-on: "ubuntu-latest"
     steps:
-      - uses: actions/checkout@v4
+      - uses: "actions/checkout@v4"
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: "actions/setup-node@v4"
         with:
-          node-version: 24
-          cache: npm
+          node-version: "24"
+          cache: "npm"
 
-      - run: npm ci --legacy-peer-deps
-      - run: npm run typecheck
+      - run: "npm ci --legacy-peer-deps"
+      - run: "npm run typecheck"
 
   build:
-    name: Build
-    runs-on: ubuntu-latest
+    name: "Build"
+    runs-on: "ubuntu-latest"
     env:
-      NODE_ENV: production
+      NODE_ENV: "production"
       # CI-only placeholder secrets. Real secrets are injected via
       # Vercel project env vars in deploy. These just have to satisfy
       # better-auth's ≥32-char schema validation at build time.
-      BETTER_AUTH_SECRET: ci-test-secret-which-is-long-enough-to-pass-the-32-char-validation
-      MINIMAX_API_KEY: ci-placeholder-not-used-during-build
+      BETTER_AUTH_SECRET: "ci-test-secret-which-is-long-enough-to-pass-the-32-char-validation"
+      MINIMAX_API_KEY: "ci-placeholder-not-used-during-build"
     steps:
-      - uses: actions/checkout@v4
+      - uses: "actions/checkout@v4"
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: "actions/setup-node@v4"
         with:
-          node-version: 24
-          cache: npm
+          node-version: "24"
+          cache: "npm"
 
-      - run: npm ci --legacy-peer-deps
-      - run: npm run build
+      - run: "npm ci --legacy-peer-deps"
+      - run: "npm run build"
