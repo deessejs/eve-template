@@ -211,7 +211,13 @@ export function AgentChat({
 
       <div
         className={cn(
-          "mx-auto w-full px-4 sm:px-6",
+          "mx-auto w-full px-4 pt-4 sm:px-6",
+          // The composer needs a solid background so messages scrolling
+          // behind it (within the Conversation above) don't bleed through.
+          // z-10 keeps it above the conversation content. The border-top
+          // is a one-pixel visual separator — no shadow to keep the
+          // sidebar aesthetic flat.
+          "sticky bottom-0 z-10 border-t border-border bg-background",
           isEmpty
             ? "flex max-w-xl flex-1 flex-col items-center justify-center gap-8 pb-[10vh]"
             : "max-w-3xl shrink-0 pb-6",
