@@ -139,9 +139,9 @@ export function ChatSidebar({ initialItems }: { initialItems: SidebarItem[] }) {
                     item.title ?? item.preview ?? "New chat";
                   return (
                     <SidebarMenuItem key={item.id}>
-                      <SidebarMenuButton asChild isActive={isActive}>
+                      <SidebarMenuButton isActive={isActive}>
                         <Link
-                          className="flex min-w-0 flex-col items-start gap-0.5"
+                          className="flex min-w-0 flex-row items-start gap-0.5"
                           href={`/?c=${item.id}`}
                         >
                           <span
