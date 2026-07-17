@@ -28,7 +28,7 @@ jobs:
           node-version: "24"
           cache: "npm"
 
-      - run: "npm install --legacy-peer-deps"
+      - run: "npm install --include=dev --legacy-peer-deps"
       # No lint script in package.json yet — this job is a placeholder.
       # When a linter is added (ESLint / Biome), wire it here via
       # `npm run lint`. Until then, fail open so the workflow doesn't
@@ -49,7 +49,7 @@ jobs:
           node-version: "24"
           cache: "npm"
 
-      - run: "npm install --legacy-peer-deps"
+      - run: "npm install --include=dev --legacy-peer-deps"
       - run: "npm run typecheck"
 
   build:
@@ -72,5 +72,5 @@ jobs:
           node-version: "24"
           cache: "npm"
 
-      - run: "npm install --legacy-peer-deps"
+      - run: "npm install --include=dev --legacy-peer-deps"
       - run: "npm run build"
