@@ -287,6 +287,25 @@ Sign out: click the **Sign out** button in the chat header (top-right).
 
 For deeper context on the auth model and security warnings, see [`docs/learnings/vercel/eve/auth.md`](./docs/learnings/vercel/eve/auth.md) and the [integration plan](./docs/plans/drizzle-better-auth-integration.md).
 
+## Chat sessions
+
+The chat surface ships with a left-rail sidebar that lists every conversation the signed-in user has started. The list, the events, and the durable eve cursor all live in **our** database — eve does not expose a "list my sessions" API.
+
+**Data model** — two new tables live alongside the better-auth ones:
+
+- `conversation` — one row per thread, scoped by `userId` (FK to `user.id`, cascade). Carries the eve-side handles (`eveSessionId`, `eveContinuationToken`, `eveStreamIndex`) plus UX fields (`title`, `preview`, `messageCount`, `pinned`, `archivedAt`).
+- `conversation_event` — append-only log of eve stream events, indexed by `(conversationId, sequence)`. A `UNIQUE (conversationId, eventId)` constraint absorbs duplicate inserts from network retries.
+
+**API surface** — eight routes under `/api/conversations/*` (list / create / get / patch / delete / eve-state / events POST batch / events GET cursor). Every route filters by the verified `userId` from `requireUser()`; no row is ever visible to a different user. POST/PATCH/DELETE require a same-origin request (origin check against `NEXT_PUBLIC_BETTER_AUTH_URL`).
+
+**URL is the truth** — the chat page at `/?c=<conversationId>` reads the `c` query parameter and loads the conversation server-side. The `useEveAgent()` hook receives `initialSession` and `initialEvents` so reload / deep-link / back-button work without losing context. The React `key` on the page remounts the hook on thread switch, mirroring the `eve/react` documentation.
+
+**Sidebar UI** — built on the official shadcn `sidebar` primitive (`npx shadcn@latest add sidebar`). Sits inside the `(with-sidebar)/` route group so it does not leak onto future sibling pages (e.g. `settings/sessions` from issue #3). Footer carries the existing `SignOutButton` unchanged. ⌘B toggles the rail.
+
+**Event persistence** — the client coalesces events into batched POSTs (500 ms or 50 events, whichever first) and the route uses `ON CONFLICT DO NOTHING` to absorb duplicates. Per-event size cap: 256 KB; unknown event types are dropped client-side with a `console.warn`. Subagent `childSessionId`s are not persisted as their own rows (see `eve/docs/concepts/sessions-runs-and-streaming.md`).
+
+For the implementation spec, see [`docs/plans/5.md`](./docs/plans/5.md).
+
 ## Testing with evals
 
 ```bash
