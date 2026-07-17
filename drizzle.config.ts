@@ -4,13 +4,11 @@ import { defineConfig } from "drizzle-kit";
 //   dotenv -e .env.local -- npx drizzle-kit generate
 // Or export DATABASE_URL in your shell.
 //
-// The `schema` path points at the file produced by `npx auth@latest generate`
-// (better-auth's Drizzle adapter writes db/schema/auth.ts with user / session /
-// account / verification tables, plus whatever plugin-specific tables we add
-// later — e.g. admin() adds role / banned / banReason / banExpires to user
-// and impersonatedBy to session).
+// The `schema` path points at the barrel re-exporting every schema file in
+// the project (currently `./auth.ts` and `./chat.ts`). Add new schema files
+// under `db/schema/` and re-export them from `./db/schema/index.ts`.
 export default defineConfig({
-  schema: "./db/schema/auth.ts",
+  schema: "./db/schema/index.ts",
   out: "./db/migrations",
   dialect: "postgresql",
   dbCredentials: {

@@ -18,7 +18,16 @@ describe("project structure", () => {
     expect(existsSync(resolve(ROOT, "app/layout.tsx"))).toBe(true);
     expect(existsSync(resolve(ROOT, "app/login/page.tsx"))).toBe(true);
     expect(existsSync(resolve(ROOT, "app/(authenticated)/layout.tsx"))).toBe(true);
-    expect(existsSync(resolve(ROOT, "app/(authenticated)/page.tsx"))).toBe(true);
+    // The chat page lives under the (with-sidebar) sub-group so the sidebar
+    // does not leak into sibling pages (e.g. settings).
+    expect(
+      existsSync(
+        resolve(ROOT, "app/(authenticated)/(with-sidebar)/layout.tsx"),
+      ),
+    ).toBe(true);
+    expect(
+      existsSync(resolve(ROOT, "app/(authenticated)/(with-sidebar)/page.tsx")),
+    ).toBe(true);
   });
 
   it("ships auth + DB wiring", () => {
@@ -26,7 +35,53 @@ describe("project structure", () => {
     expect(existsSync(resolve(ROOT, "lib/auth-client.ts"))).toBe(true);
     expect(existsSync(resolve(ROOT, "lib/eve-auth.ts"))).toBe(true);
     expect(existsSync(resolve(ROOT, "db/schema/auth.ts"))).toBe(true);
+    expect(existsSync(resolve(ROOT, "db/schema/chat.ts"))).toBe(true);
+    expect(existsSync(resolve(ROOT, "db/schema/index.ts"))).toBe(true);
     expect(existsSync(resolve(ROOT, "db/migrations/0000_init.sql"))).toBe(true);
+    expect(
+      existsSync(resolve(ROOT, "db/migrations/0001_unusual_red_shift.sql")),
+    ).toBe(true);
+  });
+
+  it("ships the chat session surface", () => {
+    expect(existsSync(resolve(ROOT, "lib/conversations.ts"))).toBe(true);
+    expect(existsSync(resolve(ROOT, "lib/require-user.ts"))).toBe(true);
+    expect(existsSync(resolve(ROOT, "lib/events.ts"))).toBe(true);
+    expect(existsSync(resolve(ROOT, "app/api/conversations/route.ts"))).toBe(
+      true,
+    );
+    expect(
+      existsSync(resolve(ROOT, "app/api/conversations/[id]/route.ts")),
+    ).toBe(true);
+    expect(
+      existsSync(
+        resolve(
+          ROOT,
+          "app/api/conversations/[id]/eve-state/route.ts",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      existsSync(
+        resolve(ROOT, "app/api/conversations/[id]/events/route.ts"),
+      ),
+    ).toBe(true);
+    expect(
+      existsSync(
+        resolve(
+          ROOT,
+          "app/(authenticated)/_components/sidebar.tsx",
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  it("ships the shadcn sidebar primitive", () => {
+    expect(existsSync(resolve(ROOT, "components/ui/sidebar.tsx"))).toBe(
+      true,
+    );
+    expect(existsSync(resolve(ROOT, "components/ui/sheet.tsx"))).toBe(true);
+    expect(existsSync(resolve(ROOT, "hooks/use-mobile.ts"))).toBe(true);
   });
 
   it("ships community files", () => {

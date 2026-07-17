@@ -19,6 +19,6 @@ export default defineConfig({
     environment: "node",
     include: ["tests/**/*.{test,spec}.ts"],
     exclude: ["node_modules", ".next", ".eve", "dist", "coverage"],
-    testTimeout: 10_000,
+    testTimeout: 30_000, // pglite boot + migrations on first run
   },
 });

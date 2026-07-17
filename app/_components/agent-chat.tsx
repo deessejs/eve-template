@@ -1,8 +1,11 @@
 "use client";
 
 import type { UserContent } from "ai";
+import type { HandleMessageStreamEvent } from "eve/client";
 import { useEveAgent } from "eve/react";
 import { AlertCircleIcon } from "lucide-react";
+import { useRef } from "react";
+
 import {
   Conversation,
   ConversationContent,
@@ -17,13 +20,97 @@ import {
 import { cn } from "@/lib/utils";
 import { SignOutButton } from "@/components/sign-out-button";
 import { AgentMessage } from "./agent-message";
+import { useEventBatcher } from "./agent-chat-batcher";
+import type { ConversationMeta, PersistedEvent } from "@/lib/conversations";
 
 const AGENT_NAME = "eve-template";
 
 type AgentStatus = ReturnType<typeof useEveAgent>["status"];
 
-export function AgentChat() {
-  const agent = useEveAgent();
+export function AgentChat({
+  conversationId,
+  initialConversation,
+  initialEvents,
+}: {
+  readonly conversationId: string | null;
+  readonly initialConversation: ConversationMeta | null;
+  readonly initialEvents: readonly PersistedEvent[];
+}) {
+  const batcher = useEventBatcher(conversationId);
+
+  // Build the initial session cursor for `useEveAgent`. If we have a
+  // conversation with prior eve state, seed it; otherwise start fresh.
+  const initialSession = useRef(
+    initialConversation
+      ? {
+          sessionId: initialConversation.eveSessionId ?? undefined,
+          continuationToken: initialConversation.eveContinuationToken ?? undefined,
+          streamIndex: initialConversation.eveStreamIndex,
+        }
+      : undefined,
+  );
+
+  // Replay events for the reducer. Stored as raw payloads; the reducer is
+  // idempotent over the same event sequence.
+  const initialEveEvents = useRef(
+    initialEvents.map((e) => {
+      const { data, meta } = (e.payload ?? {}) as { data?: unknown; meta?: { at?: string } };
+      return {
+        type: e.type,
+        ...(data !== undefined ? { data } : {}),
+        ...(meta ? { meta } : {}),
+      } as unknown as HandleMessageStreamEvent;
+    }),
+  );
+
+  // Track the last-persisted cursor so we can dedupe onSessionChange fires
+  // (the hook fires once per turn in the `finally` of `send()`).
+  const lastPersisted = useRef<{
+    sessionId?: string;
+    continuationToken?: string;
+    streamIndex: number;
+  }>({
+    sessionId: initialSession.current?.sessionId,
+    continuationToken: initialSession.current?.continuationToken,
+    streamIndex: initialSession.current?.streamIndex ?? 0,
+  });
+
+  const agent = useEveAgent({
+    // Note: the React `key` prop drives remount when switching threads — it's
+    // applied on the parent <AgentChat /> in `page.tsx`, NOT here. We do not
+    // pass `initialSession` to `useEveAgent` because the React `key` on the
+    // parent ensures a fresh hook instance per conversation.
+    initialSession: initialSession.current,
+    initialEvents: initialEveEvents.current as unknown as readonly HandleMessageStreamEvent[],
+    onEvent: (event) => batcher.push(toIncomingEvent(event)),
+    onSessionChange: (session) => {
+      if (!conversationId) return;
+      if (!session.sessionId) return;
+      const last = lastPersisted.current;
+      if (
+        last.sessionId === session.sessionId &&
+        last.continuationToken === session.continuationToken &&
+        last.streamIndex === session.streamIndex
+      ) {
+        return; // no-op: cursor unchanged since last PATCH
+      }
+      lastPersisted.current = {
+        sessionId: session.sessionId,
+        continuationToken: session.continuationToken,
+        streamIndex: session.streamIndex,
+      };
+      void fetch(`/api/conversations/${conversationId}/eve-state`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          sessionId: session.sessionId,
+          continuationToken: session.continuationToken,
+          streamIndex: session.streamIndex,
+        }),
+      });
+    },
+  });
+
   const isBusy = agent.status === "submitted" || agent.status === "streaming";
   const isEmpty = agent.data.messages.length === 0;
 
@@ -60,7 +147,7 @@ export function AgentChat() {
   );
 
   return (
-    <main className="flex h-dvh flex-col overflow-hidden bg-background text-foreground">
+    <main className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-background text-foreground">
       {isEmpty ? null : (
         <header className="flex h-14 shrink-0 items-center justify-between gap-3 px-4">
           <span className="flex min-w-0 items-center gap-2">
@@ -94,7 +181,9 @@ export function AgentChat() {
                 }
                 key={message.id}
                 message={message}
-                onInputResponses={(inputResponses) => agent.send({ inputResponses })}
+                onInputResponses={(inputResponses) =>
+                  agent.send({ inputResponses })
+                }
               />
             ))}
           </ConversationContent>
@@ -145,4 +234,27 @@ function StatusDot({ status }: { readonly status: AgentStatus }) {
       <span className={cn("relative inline-flex size-1 rounded-full transition-colors", tone)} />
     </span>
   );
+}
+
+type EveRawEvent = HandleMessageStreamEvent;
+
+function toIncomingEvent(event: EveRawEvent): {
+  type: string;
+  sequence: number;
+  payload: unknown;
+} {
+  // The `data` and `meta` properties are part of every member of
+  // HandleMessageStreamEvent, but the union narrows the optionality per type
+  // (e.g. session.completed has no `data`). Read them via a small cast so we
+  // don't have to enumerate all 28 union members here.
+  const raw = event as unknown as {
+    type: string;
+    data?: unknown;
+    meta?: { at?: string };
+  };
+  return {
+    type: raw.type,
+    sequence: 0, // The server assigns monotonic per-conversation sequence at insert; the client doesn't have it.
+    payload: { data: raw.data ?? null, meta: raw.meta ?? null },
+  };
 }
