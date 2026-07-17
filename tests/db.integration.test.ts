@@ -128,3 +128,46 @@ describe("indexes", () => {
     );
   });
 });
+
+/**
+ * Regression for the "no history on reload" bug. The listEvents() query
+ * uses `WHERE sequence >= since`. When the client-supplied `sequence` is
+ * always 0 (the current state of the wire — the server-assigned monotonic
+ * sequence is on the Step 2 roadmap of `docs/plans/5.1`), the filter must
+ * be `gte`, not `gt`. An earlier `gt` version excluded every row on the
+ * initial load and made the chat history invisible.
+ *
+ * This test exercises the SQL filter directly via pglite, simulating the
+ * all-zero-sequence case that the wire currently produces.
+ */
+describe("listEvents filter semantics (regression for plan 5.1)", () => {
+  it("returns all events when sequence is 0 and the filter is `gte 0`", async () => {
+    const db = getTestDb();
+    await db.execute(
+      sql`INSERT INTO "user" (id, name, email, email_verified, created_at, updated_at) VALUES ('u_gt', 'A', 'gte-test@x', false, now(), now())`,
+    );
+    await db.execute(
+      sql`INSERT INTO conversation (id, user_id, eve_stream_index, message_count, pinned, created_at, updated_at) VALUES ('c_gt', 'u_gt', 0, 0, 0, now(), now())`,
+    );
+    // Insert 5 events, all with sequence=0 (current wire shape).
+    for (let i = 0; i < 5; i++) {
+      await db.execute(
+        sql`INSERT INTO conversation_event (id, conversation_id, sequence, event_id, type, payload, byte_size, created_at) VALUES (${'e_gt_' + i}, 'c_gt', 0, ${'evt-gt-' + i}, 'message.received', '{}'::jsonb, 2, now())`,
+      );
+    }
+
+    // The fixed filter (`gte 0`) returns all 5 rows.
+    const gteRows = await db.execute(
+      sql`SELECT count(*)::int AS c FROM conversation_event WHERE conversation_id = 'c_gt' AND sequence >= 0`,
+    );
+    const gteCount = (gteRows as unknown as { rows: { c: number }[] }).rows[0].c;
+    expect(gteCount).toBe(5);
+
+    // The old (broken) filter (`gt 0`) returns 0 rows — the bug.
+    const gtRows = await db.execute(
+      sql`SELECT count(*)::int AS c FROM conversation_event WHERE conversation_id = 'c_gt' AND sequence > 0`,
+    );
+    const gtCount = (gtRows as unknown as { rows: { c: number }[] }).rows[0].c;
+    expect(gtCount).toBe(0);
+  });
+});

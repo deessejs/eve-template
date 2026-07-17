@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, gte, isNull, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
 import { db } from "@/db";
@@ -254,7 +254,11 @@ export async function listEvents(
     .where(
       and(
         eq(conversationEvent.conversationId, conversationId),
-        gt(conversationEvent.sequence, since),
+        // `gte` so the initial load (since=0) returns all events. With all
+        // events currently sharing `sequence = 0` (the server-assigned
+        // monotonic sequence is on the Step 2 roadmap of `docs/plans/5.1`),
+        // `gt` would exclude every row.
+        gte(conversationEvent.sequence, since),
       ),
     )
     .orderBy(conversationEvent.sequence)
