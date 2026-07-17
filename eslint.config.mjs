@@ -29,6 +29,13 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
 
   // Project-specific tightening.
+  //
+  // Note: rules that require type information (e.g.
+  // `@typescript-eslint/no-floating-promises`) are intentionally NOT enabled
+  // here. They need `parserOptions.project` which makes lint ~10× slower
+  // and adds setup friction. For a scaffold, syntactic-only is enough.
+  // Switch to `tseslint.configs.recommendedTypeChecked` + `parserOptions`
+  // when you want stricter rules and accept the perf cost.
   {
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
@@ -36,12 +43,7 @@ export default tseslint.config(
       sourceType: "module",
     },
     rules: {
-      // Floating promises are bugs in async code; flag them.
-      "@typescript-eslint/no-floating-promises": "warn",
-      "@typescript-eslint/no-misused-promises": "warn",
-      // Encourage explicit return types on exported APIs.
       "@typescript-eslint/no-explicit-any": "warn",
-      // Style: prefer nullish coalescing over || for nullable values.
       "@typescript-eslint/no-unused-vars": [
         "warn",
         {
