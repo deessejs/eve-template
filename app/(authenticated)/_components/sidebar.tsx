@@ -179,7 +179,7 @@ export function ChatSidebar({ initialItems }: { initialItems: SidebarItem[] }) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="border-border border-t">
         <SignOutButton />
       </SidebarFooter>
       <SidebarRail />
