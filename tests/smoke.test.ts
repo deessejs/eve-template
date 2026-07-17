@@ -97,6 +97,17 @@ describe("project structure", () => {
     expect(existsSync(resolve(ROOT, ".changeset/README.md"))).toBe(true);
     expect(existsSync(resolve(ROOT, ".changeset/v0.1.0.md"))).toBe(true);
   });
+
+  it("ships the auto-title route", () => {
+    expect(
+      existsSync(
+        resolve(
+          ROOT,
+          "app/api/conversations/[id]/generate-title/route.ts",
+        ),
+      ),
+    ).toBe(true);
+  });
 });
 
 describe("package.json", () => {

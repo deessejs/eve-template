@@ -127,6 +127,48 @@ export function AgentChat({
     prevStatusRef.current = agent.status;
   }, [agent.status, qc]);
 
+  // Fire-and-forget auto-title: after the first turn settles, ask the
+  // server to generate a 3-6 word title from the first user-text and
+  // patch the conversation. One-shot per conversation (ref-guarded),
+  // skipped if the user has already manually set a title (server-side
+  // check). Errors are logged and swallowed — the title is best-effort.
+  const autoTitleFiredRef = useRef(false);
+  useEffect(() => {
+    if (autoTitleFiredRef.current) return;
+    if (agent.status !== "ready") return;
+    if (agent.events.length === 0) return;
+    if (!conversationId) return;
+
+    const firstUserText = agent.events
+      .find((e) => e.type === "message.received")
+      ?.data?.parts?.find((p) => p.type === "text")?.text;
+    if (typeof firstUserText !== "string") return;
+    if (firstUserText.trim().length < 4) return;
+
+    autoTitleFiredRef.current = true;
+    const cid = conversationId;
+    void fetch(`/api/conversations/${cid}/generate-title`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ userMessage: firstUserText.slice(0, 500) }),
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.item?.title) {
+          qc.setQueryData<Array<{ id: string; title: string | null }>>(
+            CONVERSATIONS_QUERY_KEY,
+            (old) =>
+              (old ?? []).map((i) =>
+                i.id === cid ? { ...i, title: data.item.title } : i,
+              ),
+          );
+        }
+      })
+      .catch(() => {
+        // non-critical
+      });
+  }, [agent.status, agent.events, conversationId, qc]);
+
   const handleSubmit = async (message: PromptInputMessage) => {
     const text = message.text.trim();
     if ((text.length === 0 && message.files.length === 0) || isBusy) return;
