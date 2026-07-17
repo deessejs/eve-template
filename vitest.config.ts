@@ -17,8 +17,11 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["tests/**/*.{test,spec}.ts"],
+    include: ["tests/**/*.{test,spec}.{ts,tsx}"],
     exclude: ["node_modules", ".next", ".eve", "dist", "coverage"],
     testTimeout: 30_000, // pglite boot + migrations on first run
+    // Per-file: replay-diagnosis uses node (DB-free reducer).
+    // The component test uses happy-dom (set in its own file via
+    // `// @vitest-environment happy-dom`).
   },
 });
