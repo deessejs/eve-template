@@ -23,7 +23,11 @@ describe("reducer replay diagnosis (issue #5 / 5.1)", () => {
 
     let data = reducer.initial();
     for (const evt of persistedInDbOrder) {
-      data = reducer.reduce(data, evt);
+      // The strict `EveAgentReducerEvent` type expects per-event `data`
+      // shapes. We test the reducer's behavior with the actual persisted
+      // shape (cast through unknown to silence the discriminator mismatch
+      // — runtime dispatches on `type`, not on `data`'s narrow shape).
+      data = reducer.reduce(data, evt as never);
     }
 
     console.log("\n=== REDUCER OUTPUT (persisted order, current behavior) ===");
@@ -51,7 +55,7 @@ describe("reducer replay diagnosis (issue #5 / 5.1)", () => {
 
     let data = reducer.initial();
     for (const evt of streamOrder) {
-      data = reducer.reduce(data, evt);
+      data = reducer.reduce(data, evt as never);
     }
 
     console.log("\n=== REDUCER OUTPUT (stream order, ideal) ===");

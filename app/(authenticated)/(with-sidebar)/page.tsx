@@ -1,5 +1,5 @@
 import { AgentChat } from "@/app/_components/agent-chat";
-import { getConversation, listEvents } from "@/lib/conversations";
+import { getConversation, listConversations, listEvents } from "@/lib/conversations";
 import { requireUser } from "@/lib/require-user";
 import { redirect } from "next/navigation";
 
@@ -17,12 +17,23 @@ export default async function Page({ searchParams }: { searchParams: SearchParam
   const params = await searchParams;
   const conversationId = params.c;
 
-  // No `?c=` → resume the most-recent non-archived conversation, or fall back
-  // to the empty state (the `<AgentChat />` will create a fresh row on the
-  // first `session.started` event from eve).
   const resolvedId = conversationId;
   let initialConversation: Awaited<ReturnType<typeof getConversation>> = null;
   let initialEvents: Awaited<ReturnType<typeof listEvents>>["events"] = [];
+
+  // No `?c=` → resolve to the most-recent non-archived conversation and
+  // redirect. This is the deferred decision from `docs/plans/5.md` that
+  // surfaces as the most-likely root cause of "no history on reload" in
+  // `docs/plans/5.1` — without `?c=`, the page falls through to the empty
+  // composer and the user sees no history even though `useEveAgent` would
+  // replay events just fine.
+  if (!resolvedId) {
+    const items = await listConversations(auth.userId, { limit: 1 });
+    if (items.length > 0) {
+      redirect(`/?c=${items[0].id}`);
+    }
+    // No conversations: fall through to the empty composer.
+  }
 
   if (resolvedId) {
     initialConversation = await getConversation(auth.userId, resolvedId);
