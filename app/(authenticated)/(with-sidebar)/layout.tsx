@@ -3,6 +3,7 @@ import { Suspense } from "react";
 
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { ChatSidebar } from "@/app/(authenticated)/_components/sidebar";
+import { AgentHeader } from "@/app/_components/agent-header";
 import { QueryProvider } from "@/app/_components/query-provider";
 import { listConversations } from "@/lib/conversations";
 import { requireUser } from "@/lib/require-user";
@@ -50,8 +51,9 @@ export default async function WithSidebarLayout({
           <ChatSidebar initialItems={items} />
         </Suspense>
         <SidebarInset>
-          <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4">
+          <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-3 border-b bg-background px-4">
             <SidebarTrigger />
+            <AgentHeader />
           </header>
           <div className="flex min-h-0 flex-1 flex-col">{children}</div>
         </SidebarInset>

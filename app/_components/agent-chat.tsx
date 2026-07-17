@@ -19,15 +19,10 @@ import {
   PromptInputTextarea,
 } from "@/components/ai-elements/prompt-input";
 import { cn } from "@/lib/utils";
-import { SignOutButton } from "@/components/sign-out-button";
 import { AgentMessage } from "./agent-message";
 import { useEventBatcher } from "./agent-chat-batcher";
 import { CONVERSATIONS_QUERY_KEY } from "@/app/(authenticated)/_components/sidebar";
 import type { ConversationMeta, PersistedEvent } from "@/lib/conversations";
-
-const AGENT_NAME = "eve-template";
-
-type AgentStatus = ReturnType<typeof useEveAgent>["status"];
 
 export function AgentChat({
   conversationId,
@@ -166,16 +161,6 @@ export function AgentChat({
 
   return (
     <main className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-background text-foreground">
-      {isEmpty ? null : (
-        <header className="flex h-14 shrink-0 items-center justify-between gap-3 px-4">
-          <span className="flex min-w-0 items-center gap-2">
-            <span className="truncate text-muted-foreground text-sm">{AGENT_NAME}</span>
-            <StatusDot status={agent.status} />
-          </span>
-          <SignOutButton />
-        </header>
-      )}
-
       {agent.error ? (
         <div className="mx-auto w-full max-w-3xl shrink-0 px-4 pt-2 sm:px-6">
           <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-sm">
@@ -223,40 +208,9 @@ export function AgentChat({
             : "max-w-3xl shrink-0 pb-6",
         )}
       >
-        {isEmpty ? (
-          <div className="flex flex-col items-center gap-3 text-center">
-            <h1 className="font-medium text-5xl tracking-tighter">{AGENT_NAME}</h1>
-          </div>
-        ) : null}
         <div className="w-full">{composer}</div>
       </div>
     </main>
-  );
-}
-
-function StatusDot({ status }: { readonly status: AgentStatus }) {
-  const isLive = status === "submitted" || status === "streaming";
-  const tone =
-    status === "error"
-      ? "bg-destructive"
-      : isLive
-        ? "bg-emerald-500"
-        : status === "ready"
-          ? "bg-muted-foreground"
-          : "bg-muted-foreground/50";
-
-  return (
-    <span className="relative flex size-1">
-      {isLive ? (
-        <span
-          className={cn(
-            "absolute inline-flex size-full animate-ping rounded-full opacity-75",
-            tone,
-          )}
-        />
-      ) : null}
-      <span className={cn("relative inline-flex size-1 rounded-full transition-colors", tone)} />
-    </span>
   );
 }
 
