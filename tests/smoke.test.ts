@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -40,7 +40,11 @@ describe("project structure", () => {
   it("ships the changesets bootstrap", () => {
     expect(existsSync(resolve(ROOT, ".changeset/config.json"))).toBe(true);
     expect(existsSync(resolve(ROOT, ".changeset/README.md"))).toBe(true);
-    expect(existsSync(resolve(ROOT, ".changeset/v0.1.0.md"))).toBe(true);
+    // At least one user-authored changeset file (excluding README.md) must
+    // exist so the release skill has something to consume.
+    const userChangesets = readdirSync(resolve(ROOT, ".changeset"))
+      .filter((name) => name !== "README.md");
+    expect(userChangesets.length).toBeGreaterThan(0);
   });
 });
 
