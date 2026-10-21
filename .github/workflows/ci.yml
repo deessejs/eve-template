@@ -19,11 +19,11 @@ jobs:
     name: "Lint"
     runs-on: "ubuntu-latest"
     steps:
-      - uses: "actions/checkout@v4"
+      - uses: "actions/checkout@v5"
         with:
           fetch-depth: 0
 
-      - uses: "actions/setup-node@v4"
+      - uses: "actions/setup-node@v5"
         with:
           node-version: "24"
           cache: "npm"
@@ -36,11 +36,11 @@ jobs:
     name: "Type Check"
     runs-on: "ubuntu-latest"
     steps:
-      - uses: "actions/checkout@v4"
+      - uses: "actions/checkout@v5"
         with:
           fetch-depth: 0
 
-      - uses: "actions/setup-node@v4"
+      - uses: "actions/setup-node@v5"
         with:
           node-version: "24"
           cache: "npm"
@@ -52,11 +52,11 @@ jobs:
     name: "Test"
     runs-on: "ubuntu-latest"
     steps:
-      - uses: "actions/checkout@v4"
+      - uses: "actions/checkout@v5"
         with:
           fetch-depth: 0
 
-      - uses: "actions/setup-node@v4"
+      - uses: "actions/setup-node@v5"
         with:
           node-version: "24"
           cache: "npm"
@@ -76,11 +76,11 @@ jobs:
       BETTER_AUTH_SECRET: "ci-test-secret-which-is-long-enough-to-pass-the-32-char-validation"
       MINIMAX_API_KEY: "ci-placeholder-not-used-during-build"
     steps:
-      - uses: "actions/checkout@v4"
+      - uses: "actions/checkout@v5"
         with:
           fetch-depth: 0
 
-      - uses: "actions/setup-node@v4"
+      - uses: "actions/setup-node@v5"
         with:
           node-version: "24"
           cache: "npm"

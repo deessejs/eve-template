@@ -11,3 +11,9 @@ dist
 *.tsbuildinfo
 
 .claude/settings.local.json
+
+# Machine specific agent artefacts
+.claude/settings.local.json
+.claude/plans/
+.claude/worktrees/
+.claude/pr-body-*.md
