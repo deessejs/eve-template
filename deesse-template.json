@@ -20,18 +20,10 @@
   "product": {
     "layer": "open-community",
     "category": "ai-agent",
-    "labels": [
-      "ai",
-      "agent",
-      "eve",
-      "vercel",
-      "nextjs"
-    ],
+    "labels": ["ai", "agent", "eve", "vercel", "nextjs"],
     "image": "/ship-your-agents.png"
   },
-  "includes": [
-    "**"
-  ],
+  "includes": ["**"],
   "excludes": [
     ".changeset/*.md",
     ".claude/settings.local.json",
