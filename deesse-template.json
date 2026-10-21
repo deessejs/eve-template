@@ -1,0 +1,57 @@
+{
+  "$schema": "https://raw.githubusercontent.com/deessejs/deessejs/main/templates/schema/template-v2.json",
+  "name": "eve-template",
+  "slug": "eve-starter",
+  "title": "Eve Starter",
+  "description": "An agent application on eve with streaming chat, typed tools and persistence, so you ship with your agent instead of against it.",
+  "version": "0.1.0",
+  "type": "template:starter",
+  "author": "DeesseJS <hello@deessejs.com>",
+  "license": "MIT",
+  "source": {
+    "repo": "deessejs/eve-template",
+    "ref": "main"
+  },
+  "requires": {
+    "runtime": "node",
+    "node": "24.x",
+    "packageManager": "npm@10"
+  },
+  "product": {
+    "layer": "open-community",
+    "category": "ai-agent",
+    "labels": ["ai", "agent", "eve", "vercel", "nextjs"],
+    "image": "/ship-your-agents.png"
+  },
+  "includes": ["**"],
+  "excludes": [
+    ".changeset/*.md",
+    ".claude/settings.local.json",
+    ".claude/agent-memory/**",
+    ".claude/plans/**",
+    ".claude/worktrees/**",
+    ".claude/pr-body-*.md",
+    ".github/ISSUE_TEMPLATE/**",
+    ".github/CODEOWNERS",
+    ".github/FUNDING.yml",
+    ".github/PULL_REQUEST_TEMPLATE.md",
+    "CHANGELOG.md",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/.next/**",
+    "**/.turbo/**",
+    "**/coverage/**",
+    "**/.DS_Store",
+    "**/.env",
+    "**/.env.*"
+  ],
+  "fileTypes": {
+    "README.md": "doc",
+    "LICENSE": "doc",
+    "CONTRIBUTING.md": "doc",
+    "AGENTS.md": "doc",
+    "CLAUDE.md": "doc",
+    ".changeset/config.json": "config",
+    ".github/workflows/ci.yml": "ci"
+  }
+}
