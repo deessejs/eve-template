@@ -1,0 +1,56 @@
+{
+  "$schema": "https://app.deessejs.com/schema/template/v1.json",
+  "formatVersion": 1,
+  "name": "eve-template",
+  "title": "Eve Starter",
+  "description": "Starter template for building, running, and shipping AI agents with eve (by Vercel).",
+  "version": "1.0.0",
+  "type": "template:agent",
+  "author": "DeesseJS <hello@deessejs.com>",
+  "license": "MIT",
+  "category": "ai-agent",
+  "labels": [
+    "ai",
+    "agent",
+    "eve",
+    "vercel"
+  ],
+  "source": {
+    "repo": "deessejs/eve-template"
+  },
+  "includes": [
+    "**/*"
+  ],
+  "excludes": [
+    "deesse-template.json",
+    ".changeset/**",
+    ".claude/**",
+    ".codex/**",
+    ".github/ISSUE_TEMPLATE/**",
+    ".github/CODEOWNERS",
+    ".github/FUNDING.yml",
+    ".github/PULL_REQUEST_TEMPLATE.md",
+    "docs/**",
+    "CHANGELOG.md",
+    "CLAUDE.md",
+    "CONTRIBUTING.md",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/.next/**",
+    "**/.turbo/**",
+    "**/coverage/**",
+    "**/.DS_Store",
+    ".env",
+    "**/.env",
+    ".env.local",
+    "**/.env.local",
+    ".env.*.local",
+    "**/.env.*.local",
+    ".env.development",
+    "**/.env.development",
+    ".env.production",
+    "**/.env.production",
+    ".env.test",
+    "**/.env.test"
+  ]
+}
